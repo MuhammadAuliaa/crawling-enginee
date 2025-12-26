@@ -17,44 +17,39 @@
 
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <link rel="apple-touch-icon" sizes="76x76" href="../assets/img/apple-icon.png">
-  <link rel="icon" type="image/png" href="../assets/img/favicon.png">
-  <title>
-    Soft UI Dashboard 3 by Creative Tim
-  </title>
-  <!--     Fonts and icons     -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Instagram Crawling Engine</title>
+
+  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700,800" rel="stylesheet" />
-  <!-- Nucleo Icons -->
-  <link href="https://demos.creative-tim.com/soft-ui-dashboard/assets/css/nucleo-icons.css" rel="stylesheet" />
-  <link href="https://demos.creative-tim.com/soft-ui-dashboard/assets/css/nucleo-svg.css" rel="stylesheet" />
-  <!-- Font Awesome Icons -->
+
+  <!-- Icons -->
+  <link href="{{ url_for('static', filename='css/nucleo-icons.css') }}" rel="stylesheet" />
+  <link href="{{ url_for('static', filename='css/nucleo-svg.css') }}" rel="stylesheet" />
   <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
-  <!-- CSS Files -->
-  <link id="pagestyle" href="../assets/css/soft-ui-dashboard.css?v=1.1.0" rel="stylesheet" />
-  <!-- Nepcha Analytics (nepcha.com) -->
-  <!-- Nepcha is a easy-to-use web analytics. No cookies and fully compliant with GDPR, CCPA and PECR. -->
-  <script defer data-site="YOUR_DOMAIN_HERE" src="https://api.nepcha.com/js/nepcha-analytics.js"></script>
+
+  <!-- Soft UI CSS -->
+  <link id="pagestyle"
+        href="{{ url_for('static', filename='css/soft-ui-dashboard.css') }}"
+        rel="stylesheet" />
+
   <style>
     .text-ellipsis {
-      max-width: 280px;       /* sesuaikan lebar kolom */
+      max-width: 280px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       display: inline-block;
-      vertical-align: middle;
     }
     .text-ellipsis-komentar {
-      max-width: 320px;       /* sesuaikan lebar kolom */
+      max-width: 320px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       display: inline-block;
-      vertical-align: middle;
     }
   </style>
-
-
 </head>
 
 <body class="g-sidenav-show  bg-gray-100">
@@ -385,51 +380,72 @@
             <h6 class="mb-0">Search & Crawling Limit</h6>
           </div>
 
+          <form method="POST" action="/crawl/start">
           <div class="card-body p-3">
+
             <!-- Platform select -->
             <div class="mb-3">
               <label class="form-label text-sm">Platform</label>
-              <select class="form-select">
-                <option value="" selected disabled>Pilih platform</option>
+              <select class="form-select" name="platform" required>
+                <option value="" disabled selected>Pilih platform</option>
                 <option value="instagram">Instagram</option>
-                <option value="tiktok">TikTok</option>
-                <option value="google_maps">Google Maps</option>
-                <option value="twitter">Twitter / X</option>
-                <option value="youtube">YouTube</option>
               </select>
             </div>
 
             <!-- URL input -->
             <div class="mb-3">
               <label class="form-label text-sm">URL</label>
-              <input 
-                type="text" 
-                class="form-control" 
+              <input
+                type="text"
+                name="url"
+                class="form-control"
                 placeholder="Masukkan URL"
+                required
               >
             </div>
 
-            <!-- Limit crawling input -->
+            <!-- Limit -->
             <div class="mb-3">
               <label class="form-label text-sm">Limit Data Crawling</label>
-              <input 
-                type="number" 
-                class="form-control" 
+              <input
+                type="number"
+                name="limit"
+                class="form-control"
                 placeholder="Contoh: 100"
                 min="1"
               >
-              <small class="text-muted">
-                Jumlah maksimal data yang akan di-crawling
-              </small>
             </div>
 
             <!-- Run button -->
             <div class="d-grid">
-              <button class="btn btn-success">
+              <button type="submit" class="btn btn-success">
                 Start
               </button>
             </div>
+
           </div>
+        </form>
+
+        {% if run_id %}
+        <div class="d-flex justify-content-center align-items-center gap-2 mt-3" id="crawlStatus">
+
+          <!-- Animasi loading -->
+          <div
+            class="spinner-border spinner-border-sm text-success"
+            role="status"
+            id="crawlSpinner"
+          >
+            <span class="visually-hidden">Loading...</span>
+          </div>
+
+          <!-- Text -->
+          <div class="text-sm" id="crawlText">
+            Crawling data <strong>{{ platform|capitalize }}</strong> sedang berjalan
+          </div>
+
+        </div>
+        {% endif %}
+
         </div>
       </div>
     </div>
@@ -441,10 +457,33 @@
               <div class="row">
                 <div class="col-lg-6 col-7">
                   <h6>Data</h6>
-                  <p class="text-sm mb-0">
+                  <!-- <p class="text-sm mb-0">
                     <i class="fa fa-check text-info" aria-hidden="true"></i>
                     <span class="font-weight-bold ms-1">Maksimal 500 baris data</span>
-                  </p>
+                  </p> -->
+                  <!-- BUTTON AREA -->
+                  <div class="col-lg-6 col-6 text-end">
+
+                    {% if crawl_results %}
+                      <!-- Download -->
+                      <a
+                        href="/crawl/download/{{ run_id_result }}"
+                        class="btn btn-sm btn-info me-2"
+                      >
+                        <i class="fa fa-download me-1"></i> Download
+                      </a>
+
+                      <!-- Store DB -->
+                      <button
+                        class="btn btn-sm btn-info"
+                        onclick="storeToDB()"
+                      >
+                        <i class="fa fa-database me-1"></i> Store DB
+                      </button>
+                    {% endif %}
+
+                  </div>
+
                 </div>
                 <div class="col-lg-6 col-5 my-auto text-end">
                   <div class="dropdown float-lg-end pe-4">
@@ -473,158 +512,108 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td>
-                        <div class="d-flex px-2 py-1">
-                          <div>
-                            <img src="../assets/img/instagram.png" class="avatar avatar-sm me-3" alt="xd">
+                    {% if crawl_results %}
+                      {% for item in crawl_results %}
+                      <tr>
+
+                        <!-- Platform -->
+                        <td>
+                          <div class="d-flex px-2 py-1">
+                            <div>
+                              <!-- <img
+                                src="{{ url_for('static', filename='img/instagram.png') }}"
+                                class="avatar avatar-sm me-3"
+                                alt="instagram"
+                              > -->
+                            </div>
+                            <div class="align-middle text-center text-sm">
+                              <!-- <h6 class="mb-0 text-sm">Instagram</h6> -->
+                              <span class="text-xs text-center text-ellipsis">
+                                Instagram
+                              </span>
+                            </div>
                           </div>
-                          <div class="d-flex flex-column justify-content-center">
-                            <h6 class="mb-0 text-sm">Instagram</h6>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <span class="text-xs font-weight-bold text-ellipsis">
-                          https://www.instagram.com/p/DSogNDJEa10/?utm_source=ig_web_copy_link&igsh=NTc4MTIwNjQ2YQ==
-                        </span>
-                      </td>
-                      <td class="align-middle text-center text-sm">
-                        <span class="text-xs font-weight-bold">Beni</span>
-                      </td>
-                      <td class="align-middle">
-                        <span class="text-xs text-ellipsis-komentar">
-                          Outfit nya never fail deh mbak😍 always keceeeeehhh ❤️
-                        </span>
-                      </td>
-                      <td class="align-middle">
-                        <span class="text-xs text-ellipsis-komentar">
-                          2025-12-24T04:42:58.000Z
-                        </span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="d-flex px-2 py-1">
-                          <div>
-                            <img src="../assets/img/instagram.png" class="avatar avatar-sm me-3" alt="xd">
-                          </div>
-                          <div class="d-flex flex-column justify-content-center">
-                            <h6 class="mb-0 text-sm">Instagram</h6>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <span class="text-xs font-weight-bold text-ellipsis">
-                          https://www.instagram.com/p/DSogNDJEa10/?utm_source=ig_web_copy_link&igsh=NTc4MTIwNjQ2YQ==
-                        </span>
-                      </td>
-                      <td class="align-middle text-center text-sm">
-                        <span class="text-xs font-weight-bold">Beni</span>
-                      </td>
-                      <td class="align-middle">
-                        <span class="text-xs text-ellipsis-komentar">
-                          Outfit nya never fail deh mbak😍 always keceeeeehhh ❤️
-                        </span>
-                      </td>
-                      <td class="align-middle">
-                        <span class="text-xs text-ellipsis-komentar">
-                          2025-12-24T04:42:58.000Z
-                        </span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="d-flex px-2 py-1">
-                          <div>
-                            <img src="../assets/img/instagram.png" class="avatar avatar-sm me-3" alt="xd">
-                          </div>
-                          <div class="d-flex flex-column justify-content-center">
-                            <h6 class="mb-0 text-sm">Instagram</h6>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <span class="text-xs font-weight-bold text-ellipsis">
-                          https://www.instagram.com/p/DSogNDJEa10/?utm_source=ig_web_copy_link&igsh=NTc4MTIwNjQ2YQ==
-                        </span>
-                      </td>
-                      <td class="align-middle text-center text-sm">
-                        <span class="text-xs font-weight-bold">Beni</span>
-                      </td>
-                      <td class="align-middle">
-                        <span class="text-xs text-ellipsis-komentar">
-                          Outfit nya never fail deh mbak😍 always keceeeeehhh ❤️
-                        </span>
-                      </td>
-                      <td class="align-middle">
-                        <span class="text-xs text-ellipsis-komentar">
-                          2025-12-24T04:42:58.000Z
-                        </span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="d-flex px-2 py-1">
-                          <div>
-                            <img src="../assets/img/instagram.png" class="avatar avatar-sm me-3" alt="xd">
-                          </div>
-                          <div class="d-flex flex-column justify-content-center">
-                            <h6 class="mb-0 text-sm">Instagram</h6>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <span class="text-xs font-weight-bold text-ellipsis">
-                          https://www.instagram.com/p/DSogNDJEa10/?utm_source=ig_web_copy_link&igsh=NTc4MTIwNjQ2YQ==
-                        </span>
-                      </td>
-                      <td class="align-middle text-center text-sm">
-                        <span class="text-xs font-weight-bold">Beni</span>
-                      </td>
-                      <td class="align-middle">
-                        <span class="text-xs text-ellipsis-komentar">
-                          Outfit nya never fail deh mbak😍 always keceeeeehhh ❤️
-                        </span>
-                      </td>
-                      <td class="align-middle">
-                        <span class="text-xs text-ellipsis-komentar">
-                          2025-12-24T04:42:58.000Z
-                        </span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="d-flex px-2 py-1">
-                          <div>
-                            <img src="../assets/img/instagram.png" class="avatar avatar-sm me-3" alt="xd">
-                          </div>
-                          <div class="d-flex flex-column justify-content-center">
-                            <h6 class="mb-0 text-sm">Instagram</h6>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <span class="text-xs font-weight-bold text-ellipsis">
-                          https://www.instagram.com/p/DSogNDJEa10/?utm_source=ig_web_copy_link&igsh=NTc4MTIwNjQ2YQ==
-                        </span>
-                      </td>
-                      <td class="align-middle text-center text-sm">
-                        <span class="text-xs font-weight-bold">Beni</span>
-                      </td>
-                      <td class="align-middle">
-                        <span class="text-xs text-ellipsis-komentar">
-                          Outfit nya never fail deh mbak😍 always keceeeeehhh ❤️
-                        </span>
-                      </td>
-                      <td class="align-middle">
-                        <span class="text-xs text-ellipsis-komentar">
-                          2025-12-24T04:42:58.000Z
-                        </span>
-                      </td>
-                    </tr>
+                        </td>
+
+                        <!-- URL -->
+                        <td>
+                          <span class="text-xs text-ellipsis">
+                            {{ item.postUrl or '-' }}
+                          </span>
+                        </td>
+
+                        <!-- Username -->
+                        <td class="align-middle text-center text-sm">
+                          <span class="text-xs">
+                            {{ item.ownerUsername or '-' }}
+                          </span>
+                        </td>
+
+                        <!-- Komentar -->
+                        <td class="align-middle">
+                          <span class="text-xs text-ellipsis-komentar">
+                            {{ item.text or '-' }}
+                          </span>
+                        </td>
+
+                        <!-- Created At -->
+                        <!-- <td class="align-middle">
+                          <span class="text-xs">
+                            {{ item.timestamp or '-' }}
+                          </span>
+                        </td> -->
+                        <!-- Created At -->
+                        <td class="align-middle text-center text-sm">
+                          <span class="text-xs">
+                            {{ item.timestamp | format_ts }}
+                          </span>
+                        </td>
+
+                      </tr>
+                      {% endfor %}
+                    {% else %}
+                      <tr>
+                        <td colspan="5" class="text-center text-muted py-4">
+                          Belum ada data crawling
+                        </td>
+                      </tr>
+                    {% endif %}
                   </tbody>
                 </table>
+                {% if total_pages is defined and total_pages > 1 %}
+                <nav class="mt-3">
+                  <ul class="pagination justify-content-center pagination-sm">
+
+                    <!-- Prev -->
+                    <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                      <a class="page-link"
+                        href="?page={{ page - 1 }}">
+                        ‹
+                      </a>
+                    </li>
+
+                    <!-- Page Numbers -->
+                    {% for p in range(1, total_pages + 1) %}
+                      <li class="page-item {% if p == page %}active{% endif %}">
+                        <a class="page-link"
+                          href="?page={{ p }}">
+                          {{ p }}
+                        </a>
+                      </li>
+                    {% endfor %}
+
+                    <!-- Next -->
+                    <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                      <a class="page-link"
+                        href="?page={{ page + 1 }}">
+                        ›
+                      </a>
+                    </li>
+
+                  </ul>
+                </nav>
+                {% endif %}
+
               </div>
             </div>
           </div>
@@ -920,6 +909,38 @@
   <script async defer src="https://buttons.github.io/buttons.js"></script>
   <!-- Control Center for Soft Dashboard: parallax effects, scripts for the example pages etc -->
   <script src="../assets/js/soft-ui-dashboard.min.js?v=1.1.0"></script>
+  
+  {% if run_id %}
+  <script>
+    const spinner = document.getElementById("crawlSpinner");
+    const text = document.getElementById("crawlText");
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch("/crawl/status/{{ run_id }}");
+        const data = await res.json();
+
+        if (data.status === "SUCCEEDED") {
+          clearInterval(interval);
+
+          // 🔥 TRIGGER UTAMA
+          window.location.href = "/crawl/result/{{ run_id }}";
+        }
+
+        if (data.status === "FAILED") {
+          clearInterval(interval);
+
+          if (spinner) spinner.remove();
+          text.innerHTML = "Crawling gagal ❌";
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }, 3000);
+  </script>
+  {% endif %}
+
+
 </body>
 
 </html>
